@@ -2,10 +2,22 @@
 
 use Faker\Factory as FakerFactory;
 use Amqp\Connection as AmqpConnection;
+use Amqp\Exchange as AmqpExchange;
 
 if (!class_exists('AMQPConnection')) {
     require __DIR__.DIRECTORY_SEPARATOR.'stubs'.DIRECTORY_SEPARATOR.'AMQPConnection.php';
 }
+if (!class_exists('AMQPExchange')) {
+    require __DIR__.DIRECTORY_SEPARATOR.'stubs'.DIRECTORY_SEPARATOR.'AMQPExchange.php';
+}
+
+if (!class_exists('AMQPChannel')) {
+    require __DIR__.DIRECTORY_SEPARATOR.'stubs'.DIRECTORY_SEPARATOR.'AMQPChannel.php';
+}
+if (!defined('AMQP_NOPARAM')) {
+    define('AMQP_NOPARAM', '');
+}
+
 class AmqpTest extends PHPUnit_Framework_TestCase
 {
     /**
@@ -55,5 +67,17 @@ class AmqpTest extends PHPUnit_Framework_TestCase
                 ->method('isConnected')->willReturn(false);
         $connection->connection = $amqpConnection;
         $connection->get();
+    }
+
+    public function testExchangePublish()
+    {
+        $connection = new \AMQPConnection();
+        $channel = new \AMQPChannel($connection);
+        $exchange = new AmqpExchange($channel);
+        $publishRoutingKey = $this->faker->name;
+        $exchange->setPublishRoutingKey($publishRoutingKey);
+        $this->assertEquals($publishRoutingKey, $exchange->getPublishRoutingKey());
+        $exchange->publish('message', null);
+        $exchange->publish('message', 'routing key');
     }
 }
